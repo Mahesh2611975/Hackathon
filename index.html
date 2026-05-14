@@ -1,224 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Volunteer Hub | Light Edition</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        :root {
-            /* Light Theme Palette */
-            --primary: #4f46e5;
-            --primary-light: #eef2ff;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text-main: #1e293b;
-            --text-dim: #64748b;
-            --accent: #10b981;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<title>Hackathon Admin | Fixed Edition</title>
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            -webkit-tap-highlight-color: transparent;
-        }
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-        body { 
-            background: var(--bg); 
-            color: var(--text-main); 
-            min-height: 100vh; 
-            line-height: 1.5;
-        }
+<style>
+:root {
+    --primary:#4f46e5;
+    --bg:#f8fafc;
+    --card:#fff;
+    --text:#1e293b;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --shadow:0 4px 6px rgba(0,0,0,0.1);
+}
 
-        /* Layout */
-        .page { 
-            display: none; 
-            padding: 16px; 
-            max-width: 480px; 
-            margin: auto; 
-            animation: slideUp 0.3s ease-out; 
-        }
-        .page.active { display: block; }
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
+body{background:var(--bg);color:var(--text);}
 
-        @keyframes slideUp { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
+.page{display:none;padding:16px;max-width:480px;margin:auto;}
+.page.active{display:block;}
 
-        /* Header */
-        .header { padding: 32px 0 24px; text-align: left; }
-        .header h1 { font-size: 24px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
-        .header p { color: var(--text-dim); font-size: 14px; }
+.header{padding:20px 0;}
+.header h1{font-size:22px;}
 
-        /* Dashboard Grid */
-        .menu-grid { display: grid; gap: 16px; margin-top: 8px; }
-        .btn-menu {
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 24px;
-            border-radius: 16px;
-            text-align: left;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            box-shadow: var(--shadow);
-        }
-        .btn-menu:active { transform: scale(0.98); box-shadow: none; }
-        .btn-menu h3 { color: var(--primary); font-size: 18px; margin-bottom: 4px; }
-        .btn-menu p { color: var(--text-dim); font-size: 13px; }
+.btn{
+    background:var(--card);
+    padding:16px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    margin:10px 0;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+}
 
-        /* Scanner Styling */
-        #reader { 
-            border-radius: 16px; 
-            overflow: hidden; 
-            border: 2px solid var(--border) !important; 
-            background: #000;
-            margin-bottom: 16px;
-        }
-        #resultFrame { 
-            width: 100%; 
-            height: 300px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border); 
-            background: #fff; 
-            box-shadow: var(--shadow);
-        }
+.back{
+    background:#eef2ff;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    margin-bottom:10px;
+}
 
-        /* Team List Styles */
-        .team-card {
-            background: var(--card);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        .team-card strong { font-size: 16px; color: var(--text-main); }
-        .team-card .meta { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-        .team-card .table-tag {
-            background: var(--primary-light);
-            color: var(--primary);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 11px;
-            align-self: flex-start;
-            margin-top: 8px;
-            text-transform: uppercase;
-        }
-
-        /* Navigation */
-        .back-btn {
-            background: var(--primary-light);
-            color: var(--primary);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: inline-flex;
-            align-items: center;
-        }
-    </style>
+#reader{
+    border-radius:12px;
+    overflow:hidden;
+    margin-top:10px;
+}
+</style>
 </head>
+
 <body>
 
-    <!-- Home Page -->
-    <div id="page-home" class="page active">
-        <div class="header">
-            <h1>Hackathon Admin</h1>
-            <p>Manage participants and logistics</p>
-        </div>
-        <div class="menu-grid">
-            <div class="btn-menu" onclick="showPage('page-scan')">
-                <h3>Check-in Station</h3>
-                <p>Scan QR codes to record arrival</p>
-            </div>
-            <div class="btn-menu" onclick="showPage('page-teams')">
-                <h3>Team Directory</h3>
-                <p>View assignments and table numbers</p>
-            </div>
-        </div>
+<!-- HOME -->
+<div id="home" class="page active">
+    <div class="header">
+        <h1>Hackathon Admin Panel</h1>
     </div>
 
-    <!-- Scanner Page -->
-    <div id="page-scan" class="page">
-        <button class="back-btn" onclick="showPage('page-home')">← Dashboard</button>
-        <div id="reader"></div>
-        <iframe id="resultFrame" src="about:blank"></iframe>
-    </div>
+    <div class="btn" onclick="show('scan')">📷 QR Check-in</div>
+    <div class="btn" onclick="show('teams')">👥 Teams</div>
+    <div class="btn" onclick="show('storage')">💾 Stored Check-ins</div>
+</div>
 
-    <!-- Teams Page -->
-    <div id="page-teams" class="page">
-        <button class="back-btn" onclick="showPage('page-home')">← Dashboard</button>
-        <div class="header" style="padding-top:0;">
-            <h1>Registered Teams</h1>
+<!-- SCANNER -->
+<div id="scan" class="page">
+    <button class="back" onclick="show('home')">← Back</button>
+    <div id="reader"></div>
+</div>
+
+<!-- TEAMS -->
+<div id="teams" class="page">
+    <button class="back" onclick="show('home')">← Back</button>
+    <div id="teamList"></div>
+</div>
+
+<!-- STORAGE -->
+<div id="storage" class="page">
+    <button class="back" onclick="show('home')">← Back</button>
+    <h3>Saved Check-ins</h3>
+    <div id="storeList"></div>
+    <button class="btn" onclick="clearStorage()">Clear Storage</button>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9XzabS6y5sCY6MbVR6Co5T7ady06vCwOn3GMP9MxfvzaTywr8yDuNWUL0tC6_d0DR/exec";
+const SECRET_KEY = "MGHIREMATH0281";
+
+/* =========================
+   TEAM DATA (PRE-ADDED)
+========================= */
+let teams = [
+    { name:"Cyber Knights", lead:"Alice Smith", table:"T-01" },
+    { name:"Code Wizards", lead:"Bob Johnson", table:"T-05" },
+    { name:"InnoVate", lead:"Charlie Day", table:"T-12" }
+];
+
+/* =========================
+   LOCAL STORAGE STORE
+========================= */
+let store = JSON.parse(localStorage.getItem("checkins") || "[]");
+
+function saveStore(){
+    localStorage.setItem("checkins", JSON.stringify(store));
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+let scanner;
+
+function show(page){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+
+    if(page === "scan") startScanner();
+    else stopScanner();
+
+    if(page === "teams") renderTeams();
+    if(page === "storage") renderStore();
+}
+
+/* =========================
+   SCANNER FIXED
+========================= */
+function startScanner(){
+    scanner = new Html5Qrcode("reader");
+
+    scanner.start(
+        { facingMode:"environment" },
+        { fps:10, qrbox:250 },
+        onScan
+    );
+}
+
+function stopScanner(){
+    if(scanner){
+        scanner.stop().then(()=>scanner.clear());
+        scanner = null;
+    }
+}
+
+let last = "";
+
+function onScan(text){
+    if(text === last) return;
+    last = text;
+
+    const url = `${WEBAPP_URL}?qr=${encodeURIComponent(text)}&key=${SECRET_KEY}`;
+
+    // FIX: NO iframe → OPEN DIRECT
+    window.open(url, "_blank");
+
+    // STORE LOCALLY
+    store.push({
+        qr:text,
+        time:new Date().toLocaleString()
+    });
+    saveStore();
+
+    setTimeout(()=> last="", 3000);
+}
+
+/* =========================
+   RENDER TEAMS
+========================= */
+function renderTeams(){
+    document.getElementById("teamList").innerHTML =
+    teams.map(t=>`
+        <div class="btn">
+            <b>${t.name}</b><br>
+            Lead: ${t.lead}<br>
+            Table: ${t.table}
         </div>
-        <div id="teams-container"></div>
-    </div>
+    `).join("");
+}
 
-    <script>
-        const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9XzabS6y5sCY6MbVR6Co5T7ady06vCwOn3GMP9MxfvzaTywr8yDuNWUL0tC6_d0DR/exec";
-        const SECRET_KEY = "MGHIREMATH0281";
-        
-        let teamsData = [
-            { name: "Cyber Knights", lead: "Alice Smith", table: "T-01" },
-            { name: "Code Wizards", lead: "Bob Johnson", table: "T-05" },
-            { name: "InnoVate", lead: "Charlie Day", table: "T-12" }
-        ];
+/* =========================
+   STORAGE VIEW
+========================= */
+function renderStore(){
+    document.getElementById("storeList").innerHTML =
+    store.length ? store.map(s=>`
+        <div class="btn">
+            QR: ${s.qr}<br>
+            Time: ${s.time}
+        </div>
+    `).join("") : "<p>No check-ins yet</p>";
+}
 
-        let lastScanned = "";
-        let html5QrCode = null;
+function clearStorage(){
+    store = [];
+    saveStore();
+    renderStore();
+}
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+window.onload = ()=> renderTeams();
+</script>
 
-            if (pageId === 'page-scan') {
-                startScanner();
-            } else if (html5QrCode) {
-                html5QrCode.stop().then(() => { html5QrCode = null; });
-            }
-
-            if (pageId === 'page-teams') renderTeams();
-        }
-
-        function startScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
-        }
-
-        function onScanSuccess(decodedText) {
-            if(decodedText === lastScanned) return;
-            lastScanned = decodedText;
-            
-            if(navigator.vibrate) navigator.vibrate(50);
-
-            const finalURL = `${WEBAPP_URL}?qr=${encodeURIComponent(decodedText)}&key=${SECRET_KEY}`;
-            document.getElementById("resultFrame").src = finalURL;
-
-            setTimeout(() => { lastScanned = ""; }, 3000);
-        }
-
-        function renderTeams() {
-            const container = document.getElementById('teams-container');
-            container.innerHTML = teamsData.map(team => `
-                <div class="team-card">
-                    <strong>${team.name}</strong>
-                    <div class="meta">Lead: ${team.lead}</div>
-                    <span class="table-tag">${team.table}</span>
-                </div>
-            `).join('');
-        }
-
-        window.onload = renderTeams;
-    </script>
 </body>
 </html>
