@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-<title>Hackathon Admin | Fixed Edition</title>
+<title>Hackathon QR Admin</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -13,7 +13,6 @@
     --bg:#f8fafc;
     --card:#fff;
     --text:#1e293b;
-    --muted:#64748b;
     --border:#e2e8f0;
     --shadow:0 4px 6px rgba(0,0,0,0.1);
 }
@@ -21,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
 body{background:var(--bg);color:var(--text);}
 
-.page{display:none;padding:16px;max-width:480px;margin:auto;}
+.page{display:none;padding:16px;max-width:500px;margin:auto;}
 .page.active{display:block;}
 
 .header{padding:20px 0;}
@@ -29,12 +28,17 @@ body{background:var(--bg);color:var(--text);}
 
 .btn{
     background:var(--card);
-    padding:16px;
+    padding:14px;
     border:1px solid var(--border);
     border-radius:12px;
-    margin:10px 0;
-    cursor:pointer;
+    margin-top:10px;
     box-shadow:var(--shadow);
+}
+
+#reader{
+    margin-top:10px;
+    border-radius:12px;
+    overflow:hidden;
 }
 
 .back{
@@ -43,12 +47,6 @@ body{background:var(--bg);color:var(--text);}
     padding:8px 12px;
     border-radius:8px;
     margin-bottom:10px;
-}
-
-#reader{
-    border-radius:12px;
-    overflow:hidden;
-    margin-top:10px;
 }
 </style>
 </head>
@@ -61,15 +59,23 @@ body{background:var(--bg);color:var(--text);}
         <h1>Hackathon Admin Panel</h1>
     </div>
 
-    <div class="btn" onclick="show('scan')">📷 QR Check-in</div>
+    <div class="btn" onclick="show('scan')">📷 Start QR Scanner</div>
     <div class="btn" onclick="show('teams')">👥 Teams</div>
     <div class="btn" onclick="show('storage')">💾 Stored Check-ins</div>
 </div>
 
-<!-- SCANNER -->
+<!-- SCANNER PAGE -->
 <div id="scan" class="page">
+
     <button class="back" onclick="show('home')">← Back</button>
+
     <div id="reader"></div>
+
+    <!-- 🔥 REQUIRED RESULT BOX -->
+    <div id="resultBox" class="btn">
+        Scan QR to see details
+    </div>
+
 </div>
 
 <!-- TEAMS -->
@@ -87,11 +93,12 @@ body{background:var(--bg);color:var(--text);}
 </div>
 
 <script>
+
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9XzabS6y5sCY6MbVR6Co5T7ady06vCwOn3GMP9MxfvzaTywr8yDuNWUL0tC6_d0DR/exec";
 const SECRET_KEY = "MGHIREMATH0281";
 
 /* =========================
-   TEAM DATA (PRE-ADDED)
+   TEAM DATA
 ========================= */
 let teams = [
     { name:"Cyber Knights", lead:"Alice Smith", table:"T-01" },
@@ -100,7 +107,7 @@ let teams = [
 ];
 
 /* =========================
-   LOCAL STORAGE STORE
+   STORAGE
 ========================= */
 let store = JSON.parse(localStorage.getItem("checkins") || "[]");
 
@@ -114,6 +121,7 @@ function saveStore(){
 let scanner;
 
 function show(page){
+
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById(page).classList.add('active');
 
@@ -125,9 +133,10 @@ function show(page){
 }
 
 /* =========================
-   SCANNER FIXED
+   SCANNER
 ========================= */
 function startScanner(){
+
     scanner = new Html5Qrcode("reader");
 
     scanner.start(
@@ -146,21 +155,61 @@ function stopScanner(){
 
 let last = "";
 
-function onScan(text){
+/* =========================
+   QR SCAN HANDLER
+========================= */
+async function onScan(text){
+
     if(text === last) return;
     last = text;
 
+    document.getElementById("resultBox").innerHTML = "Checking...";
+
     const url = `${WEBAPP_URL}?qr=${encodeURIComponent(text)}&key=${SECRET_KEY}`;
 
-    // FIX: NO iframe → OPEN DIRECT
-    window.open(url, "_blank");
+    try {
 
-    // STORE LOCALLY
-    store.push({
-        qr:text,
-        time:new Date().toLocaleString()
-    });
-    saveStore();
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if(data.status === "success"){
+
+            document.getElementById("resultBox").innerHTML = `
+                <div style="color:green;font-weight:bold;font-size:18px;">
+                    CHECK-IN SUCCESSFUL
+                </div>
+                <p><b>Team:</b> ${data.team}</p>
+                <p><b>ID:</b> ${data.id}</p>
+                <p><b>Leader:</b> ${data.leader}</p>
+                <p><b>Track:</b> ${data.track}</p>
+                <p><b>Table:</b> ${data.table}</p>
+                <p><b>Time:</b> ${data.time}</p>
+            `;
+
+        } else if(data.status === "already") {
+
+            document.getElementById("resultBox").innerHTML = `
+                <div style="color:orange;font-weight:bold;">
+                    ALREADY CHECKED-IN
+                </div>
+                <p><b>Team:</b> ${data.team}</p>
+                <p><b>Time:</b> ${data.time}</p>
+            `;
+
+        } else {
+
+            document.getElementById("resultBox").innerHTML = `
+                <div style="color:red;font-weight:bold;">
+                    INVALID QR
+                </div>
+            `;
+        }
+
+    } catch(err){
+
+        document.getElementById("resultBox").innerHTML =
+            "ERROR: " + err;
+    }
 
     setTimeout(()=> last="", 3000);
 }
@@ -180,7 +229,7 @@ function renderTeams(){
 }
 
 /* =========================
-   STORAGE VIEW
+   STORAGE
 ========================= */
 function renderStore(){
     document.getElementById("storeList").innerHTML =
@@ -199,6 +248,7 @@ function clearStorage(){
 }
 
 window.onload = ()=> renderTeams();
+
 </script>
 
 </body>
