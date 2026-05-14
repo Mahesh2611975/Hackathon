@@ -1,255 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-<title>Hackathon QR Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Admin Terminal</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0a0a0a;
+            --surface: #171717;
+            --border: #262626;
+            --text: #ffffff;
+            --text-muted: #a3a3a3;
+        }
 
-<script src="https://unpkg.com/html5-qrcode"></script>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-<style>
-:root {
-    --primary:#4f46e5;
-    --bg:#f8fafc;
-    --card:#fff;
-    --text:#1e293b;
-    --border:#e2e8f0;
-    --shadow:0 4px 6px rgba(0,0,0,0.1);
-}
+        /* Typography & Layout */
+        .page { display: none; padding: 20px; min-height: 100vh; }
+        .page.active { display: block; animation: slideIn 0.2s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
-body{background:var(--bg);color:var(--text);}
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
 
-.page{display:none;padding:16px;max-width:500px;margin:auto;}
-.page.active{display:block;}
+        /* Icon Container */
+        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
 
-.header{padding:20px 0;}
-.header h1{font-size:22px;}
+        /* Cards & Buttons */
+        .action-card { 
+            background: var(--surface); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            padding: 16px; 
+            margin-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .action-card:active { background: #222; transform: scale(0.98); }
+        .action-card.primary { background: var(--primary); border-color: var(--primary); }
+        .action-card.primary:active { opacity: 0.9; }
 
-.btn{
-    background:var(--card);
-    padding:14px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    margin-top:10px;
-    box-shadow:var(--shadow);
-}
+        .back-nav { display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; margin-bottom: 24px; font-size: 14px; cursor: pointer; }
 
-#reader{
-    margin-top:10px;
-    border-radius:12px;
-    overflow:hidden;
-}
+        /* Scanner */
+        #reader { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: #000; }
 
-.back{
-    background:#eef2ff;
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    margin-bottom:10px;
-}
-</style>
+        /* POPUP SYSTEM (Bottom Sheet) */
+        #popupOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: none; align-items: flex-end; z-index: 1000;
+        }
+        #popup {
+            background: var(--surface); width: 100%; border-radius: 20px 20px 0 0;
+            padding: 24px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid var(--border);
+        }
+        #popup.show { transform: translateY(0); }
+        
+        .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .status-header h2 { font-size: 18px; font-weight: 700; }
+        
+        .data-grid { background: #000; padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-family: ui-monospace, monospace; }
+        .data-row:last-child { margin-bottom: 0; }
+        .label { color: var(--text-muted); }
+
+        .btn-close { width: 100%; margin-top: 20px; padding: 16px; border-radius: 12px; background: #333; color: white; border: none; font-weight: bold; font-size: 14px; }
+    </style>
 </head>
-
 <body>
 
 <!-- HOME -->
 <div id="home" class="page active">
     <div class="header">
-        <h1>Hackathon Admin Panel</h1>
+        <h1>Admin Control</h1>
+        <p>Real-time Session Management</p>
     </div>
 
-    <div class="btn" onclick="show('scan')">📷 Start QR Scanner</div>
-    <div class="btn" onclick="show('teams')">👥 Teams</div>
-    <div class="btn" onclick="show('storage')">💾 Stored Check-ins</div>
+    <div class="action-card primary" onclick="show('scan')">
+        <svg class="icon"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Initialize Scanner</span>
+    </div>
+
+    <div class="action-card" onclick="show('teams')">
+        <svg class="icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Database Records</span>
+    </div>
+
+    <div class="action-card" onclick="show('storage')">
+        <svg class="icon"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>Check-in Logs</span>
+    </div>
 </div>
 
-<!-- SCANNER PAGE -->
+<!-- SCANNER -->
 <div id="scan" class="page">
-
-    <button class="back" onclick="show('home')">← Back</button>
-
-    <div id="reader"></div>
-
-    <!-- 🔥 REQUIRED RESULT BOX -->
-    <div id="resultBox" class="btn">
-        Scan QR to see details
+    <div class="back-nav" onclick="show('home')">
+        <svg class="icon"><polyline points="15 18 9 12 15 6"/></svg> Back to Dashboard
     </div>
-
+    <div id="reader"></div>
 </div>
 
 <!-- TEAMS -->
 <div id="teams" class="page">
-    <button class="back" onclick="show('home')">← Back</button>
+    <div class="back-nav" onclick="show('home')">
+        <svg class="icon"><polyline points="15 18 9 12 15 6"/></svg> Dashboard
+    </div>
+    <h2 style="margin-bottom:16px">Team List</h2>
     <div id="teamList"></div>
 </div>
 
-<!-- STORAGE -->
+<!-- LOGS -->
 <div id="storage" class="page">
-    <button class="back" onclick="show('home')">← Back</button>
-    <h3>Saved Check-ins</h3>
+    <div class="back-nav" onclick="show('home')">
+        <svg class="icon"><polyline points="15 18 9 12 15 6"/></svg> Dashboard
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2>Activity Log</h2>
+        <button onclick="clearStorage()" style="background:none; color:var(--danger); border:none; font-size:12px;">Clear All</button>
+    </div>
     <div id="storeList"></div>
-    <button class="btn" onclick="clearStorage()">Clear Storage</button>
+</div>
+
+<!-- POPUP MODAL -->
+<div id="popupOverlay">
+    <div id="popup">
+        <div class="status-header">
+            <div id="pIconBox"></div>
+            <h2 id="pTitle">Status</h2>
+        </div>
+        <div id="pContent" class="data-grid"></div>
+        <button class="btn-close" onclick="closePopup()">ACKNOWLEDGE</button>
+    </div>
 </div>
 
 <script>
-
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9XzabS6y5sCY6MbVR6Co5T7ady06vCwOn3GMP9MxfvzaTywr8yDuNWUL0tC6_d0DR/exec";
 const SECRET_KEY = "MGHIREMATH0281";
 
-/* =========================
-   TEAM DATA
-========================= */
-let teams = [
-    { name:"Cyber Knights", lead:"Alice Smith", table:"T-01" },
-    { name:"Code Wizards", lead:"Bob Johnson", table:"T-05" },
-    { name:"InnoVate", lead:"Charlie Day", table:"T-12" }
-];
-
-/* =========================
-   STORAGE
-========================= */
-let store = JSON.parse(localStorage.getItem("checkins") || "[]");
-
-function saveStore(){
-    localStorage.setItem("checkins", JSON.stringify(store));
-}
-
-/* =========================
-   NAVIGATION
-========================= */
 let scanner;
+let lastScan = "";
+let history = JSON.parse(localStorage.getItem("admin_logs") || "[]");
 
-function show(page){
-
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById(page).classList.add('active');
-
-    if(page === "scan") startScanner();
-    else stopScanner();
-
-    if(page === "teams") renderTeams();
-    if(page === "storage") renderStore();
+/* Navigation */
+function show(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id === 'scan') startScanner(); else stopScanner();
+    if(id === 'teams') renderTeams();
+    if(id === 'storage') renderLogs();
 }
 
-/* =========================
-   SCANNER
-========================= */
-function startScanner(){
+/* Icons */
+const Icons = {
+    check: '<svg class="icon" style="color:var(--success)"><polyline points="20 6 9 17 4 12"/></svg>',
+    alert: '<svg class="icon" style="color:var(--warning)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    error: '<svg class="icon" style="color:var(--danger)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+};
 
+/* Scanner */
+async function startScanner() {
     scanner = new Html5Qrcode("reader");
-
-    scanner.start(
-        { facingMode:"environment" },
-        { fps:10, qrbox:250 },
-        onScan
-    );
+    await scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, onScan);
 }
 
-function stopScanner(){
-    if(scanner){
-        scanner.stop().then(()=>scanner.clear());
-        scanner = null;
+function stopScanner() { if(scanner) { scanner.stop().then(() => { scanner.clear(); scanner = null; }); } }
+
+async function onScan(text) {
+    if(text === lastScan) return;
+    lastScan = text;
+    if(navigator.vibrate) navigator.vibrate(50);
+
+    const res = await fetch(`${WEBAPP_URL}?qr=${encodeURIComponent(text)}&key=${SECRET_KEY}`);
+    const data = await res.json();
+
+    if(data.status === "success") {
+        triggerPopup("AUTHORIZED", data, "check");
+        logActivity(data.team, "SUCCESS");
+    } else if(data.status === "already") {
+        triggerPopup("DUPLICATE", data, "alert");
+    } else {
+        triggerPopup("DENIED", {reason: "Invalid Credentials"}, "error");
     }
+    setTimeout(() => { lastScan = ""; }, 3000);
 }
 
-let last = "";
+function triggerPopup(title, data, type) {
+    const overlay = document.getElementById("popupOverlay");
+    const popup = document.getElementById("popup");
+    document.getElementById("pIconBox").innerHTML = Icons[type];
+    document.getElementById("pTitle").innerText = title;
+    document.getElementById("pTitle").style.color = `var(--${type === 'check' ? 'success' : (type === 'alert' ? 'warning' : 'danger')})`;
 
-/* =========================
-   QR SCAN HANDLER
-========================= */
-async function onScan(text){
-
-    if(text === last) return;
-    last = text;
-
-    document.getElementById("resultBox").innerHTML = "Checking...";
-
-    const url = `${WEBAPP_URL}?qr=${encodeURIComponent(text)}&key=${SECRET_KEY}`;
-
-    try {
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if(data.status === "success"){
-
-            document.getElementById("resultBox").innerHTML = `
-                <div style="color:green;font-weight:bold;font-size:18px;">
-                    CHECK-IN SUCCESSFUL
-                </div>
-                <p><b>Team:</b> ${data.team}</p>
-                <p><b>ID:</b> ${data.id}</p>
-                <p><b>Leader:</b> ${data.leader}</p>
-                <p><b>Track:</b> ${data.track}</p>
-                <p><b>Table:</b> ${data.table}</p>
-                <p><b>Time:</b> ${data.time}</p>
-            `;
-
-        } else if(data.status === "already") {
-
-            document.getElementById("resultBox").innerHTML = `
-                <div style="color:orange;font-weight:bold;">
-                    ALREADY CHECKED-IN
-                </div>
-                <p><b>Team:</b> ${data.team}</p>
-                <p><b>Time:</b> ${data.time}</p>
-            `;
-
-        } else {
-
-            document.getElementById("resultBox").innerHTML = `
-                <div style="color:red;font-weight:bold;">
-                    INVALID QR
-                </div>
-            `;
-        }
-
-    } catch(err){
-
-        document.getElementById("resultBox").innerHTML =
-            "ERROR: " + err;
+    let html = "";
+    for(let key in data) {
+        if(key !== 'status') html += `<div class="data-row"><span class="label">${key.toUpperCase()}</span><span>${data[key]}</span></div>`;
     }
-
-    setTimeout(()=> last="", 3000);
+    document.getElementById("pContent").innerHTML = html;
+    overlay.style.display = "flex";
+    setTimeout(() => popup.classList.add("show"), 10);
 }
 
-/* =========================
-   RENDER TEAMS
-========================= */
-function renderTeams(){
-    document.getElementById("teamList").innerHTML =
-    teams.map(t=>`
-        <div class="btn">
-            <b>${t.name}</b><br>
-            Lead: ${t.lead}<br>
-            Table: ${t.table}
+function closePopup() {
+    document.getElementById("popup").classList.remove("show");
+    setTimeout(() => { document.getElementById("popupOverlay").style.display = "none"; }, 300);
+}
+
+function logActivity(team, status) {
+    history.unshift({ team, status, time: new Date().toLocaleTimeString() });
+    localStorage.setItem("admin_logs", JSON.stringify(history.slice(0, 50)));
+}
+
+function renderLogs() {
+    document.getElementById("storeList").innerHTML = history.map(h => `
+        <div class="action-card">
+            <div style="flex:1">
+                <div style="font-size:14px; font-weight:600">${h.team}</div>
+                <div style="font-size:11px; color:var(--text-muted)">${h.time}</div>
+            </div>
+            <div style="font-size:10px; font-weight:bold; color:var(--success)">${h.status}</div>
         </div>
-    `).join("");
+    `).join('') || '<p style="color:var(--text-muted)">No logs available</p>';
 }
 
-/* =========================
-   STORAGE
-========================= */
-function renderStore(){
-    document.getElementById("storeList").innerHTML =
-    store.length ? store.map(s=>`
-        <div class="btn">
-            QR: ${s.qr}<br>
-            Time: ${s.time}
+function renderTeams() {
+    // Replace with real data if needed
+    const teams = [{name: "Team VoltTrack", table: "T-01"}, {name: "Team AuditAI", table: "T-02"}];
+    document.getElementById("teamList").innerHTML = teams.map(t => `
+        <div class="action-card">
+            <div style="font-weight:600">${t.name}</div>
+            <div style="margin-left:auto; font-size:12px; color:var(--primary)">${t.table}</div>
         </div>
-    `).join("") : "<p>No check-ins yet</p>";
+    `).join('');
 }
 
-function clearStorage(){
-    store = [];
-    saveStore();
-    renderStore();
-}
-
-window.onload = ()=> renderTeams();
-
+function clearStorage() { history = []; localStorage.removeItem("admin_logs"); renderLogs(); }
 </script>
-
 </body>
 </html>
